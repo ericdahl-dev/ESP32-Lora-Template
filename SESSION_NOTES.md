@@ -22,6 +22,26 @@
 
 ### Session log
 
+#### 2025-08-15 14:20 UTC
+- Context: Resolved GitHub push protection violation caused by secret in .cursor/mcp.json
+- Changes:
+  - Added .cursor/mcp.json to .gitignore to prevent future commits
+  - Used git filter-branch to remove secret file from entire git history
+  - Cleaned up git reflog and garbage collected to permanently remove traces
+  - Successfully force-pushed cleaned history to GitHub
+- Commands run:
+  - `git filter-branch --force --index-filter 'git rm --cached --ignore-unmatch .cursor/mcp.json' --prune-empty --tag-name-filter cat -- --all`
+  - `rm -rf .git/refs/original/`
+  - `git reflog expire --expire=now --all`
+  - `git gc --prune=now --aggressive`
+  - `git push --force-with-lease origin main`
+- Files touched:
+  - `.gitignore` (added .cursor/mcp.json)
+  - Git history (removed .cursor/mcp.json from all commits)
+- Next steps:
+  - Monitor for any remaining secret scanning issues
+  - Ensure .cursor/mcp.json stays properly ignored in future work
+
 #### 2025-01-14 18:00 UTC
 - Context: Created ESP32 general template documentation and branch
 - Changes:
