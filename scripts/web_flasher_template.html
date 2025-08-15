@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{FIRMWARE_NAME}} - ESP32 Web Flasher</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0 0 10px 0;
+            font-size: 2.2em;
+            font-weight: 300;
+        }
+
+        .header p {
+            margin: 0;
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .firmware-info {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .firmware-info h3 {
+            margin-top: 0;
+            color: #495057;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .info-item {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #6c757d;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .info-value {
+            margin-top: 5px;
+            font-size: 1.1em;
+            color: #212529;
+        }
+
+        .instructions {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .instructions h3 {
+            margin-top: 0;
+            color: #0056b3;
+        }
+
+        .instructions ol {
+            margin: 15px 0;
+            padding-left: 20px;
+        }
+
+        .instructions li {
+            margin-bottom: 8px;
+        }
+
+        .flash-section {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .flash-button {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2em;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+        }
+
+        .flash-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+        }
+
+        .flash-button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .status {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: 500;
+            display: none;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .progress-container {
+            margin: 20px 0;
+            display: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #20c997);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: 500;
+            color: #6c757d;
+        }
+
+        .footer {
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+            padding: 20px 30px;
+            text-align: center;
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                margin: 10px;
+                border-radius: 8px;
+            }
+
+            .header {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>{{FIRMWARE_NAME}}</h1>
+            <p>ESP32 Web Flasher for Heltec WiFi LoRa 32 V3</p>
+        </div>
+
+        <div class="content">
+            <div class="firmware-info">
+                <h3>Firmware Information</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">Version</div>
+                        <div class="info-value">{{VERSION}}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Role</div>
+                        <div class="info-value">{{ROLE}}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Board</div>
+                        <div class="info-value">Heltec WiFi LoRa 32 V3</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Build Date</div>
+                        <div class="info-value">{{BUILD_DATE}}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="instructions">
+                <h3>Flashing Instructions</h3>
+                <ol>
+                    <li>Connect your Heltec V3 board via USB cable</li>
+                    <li>Put the board into download mode by holding the BOOT button while pressing RESET</li>
+                    <li>Release the RESET button, then release the BOOT button</li>
+                    <li>Click the "Flash Firmware" button below</li>
+                    <li>Wait for the flashing process to complete</li>
+                    <li>Reset the board after flashing is finished</li>
+                </ol>
+            </div>
+
+            <div class="flash-section">
+                <button id="flashButton" class="flash-button" onclick="startFlashing()">
+                    Flash Firmware
+                </button>
+
+                <div id="status" class="status"></div>
+
+                <div id="progressContainer" class="progress-container">
+                    <div class="progress-bar">
+                        <div id="progressFill" class="progress-fill"></div>
+                    </div>
+                    <div id="progressText" class="progress-text">0%</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Built with ❤️ using <a href="https://github.com/espressif/esp-idf" target="_blank">ESP-IDF</a> and <a href="https://platformio.org/" target="_blank">PlatformIO</a></p>
+            <p>Firmware source: <a href="{{REPO_URL}}" target="_blank">{{REPO_NAME}}</a></p>
+        </div>
+    </div>
+
+    <!-- ESP32 Web Flasher Library -->
+    <script src="https://unpkg.com/esp-web-flasher@latest/dist/esp-web-flasher.js"></script>
+    
+    <!-- Fallback to alternative CDN if primary fails -->
+    <script>
+        if (typeof ESPWebFlasher === 'undefined') {
+            console.log('Primary CDN failed, trying alternative...');
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/esp-web-flasher@latest/dist/esp-web-flasher.js';
+            script.onload = function() {
+                console.log('Alternative CDN loaded successfully');
+                if (typeof ESPWebFlasher !== 'undefined') {
+                    console.log('ESPWebFlasher is now available');
+                }
+            };
+            script.onerror = function() {
+                console.error('All CDN sources failed to load ESP32 Web Flasher library');
+                showStatus('error', 'Failed to load ESP32 Web Flasher library. Please check your internet connection and try again.');
+            };
+            document.head.appendChild(script);
+        }
+    </script>
+
+    <script>
+        let flasher = null;
+        let isFlashing = false;
+
+        // Check if ESP32 Web Flasher is available
+        function isFlasherAvailable() {
+            return typeof ESPWebFlasher !== 'undefined';
+        }
+
+        // Initialize the flasher
+        async function initializeFlasher() {
+            try {
+                // Wait for library to be available
+                let attempts = 0;
+                while (!isFlasherAvailable() && attempts < 50) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    attempts++;
+                }
+                
+                if (!isFlasherAvailable()) {
+                    throw new Error('ESP32 Web Flasher library failed to load after 5 seconds');
+                }
+
+                flasher = new ESPWebFlasher();
+                await flasher.connect();
+                return true;
+            } catch (error) {
+                console.error('Failed to initialize flasher:', error);
+                return false;
+            }
+        }
+
+        // Start the flashing process
+        async function startFlashing() {
+            if (isFlashing) return;
+
+            const button = document.getElementById('flashButton');
+            const status = document.getElementById('status');
+            const progressContainer = document.getElementById('progressContainer');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+
+            try {
+                isFlashing = true;
+                button.disabled = true;
+                button.textContent = 'Initializing...';
+
+                showStatus('info', 'Initializing ESP32 web flasher...');
+
+                // Initialize flasher
+                const initialized = await initializeFlasher();
+                if (!initialized) {
+                    throw new Error('Failed to initialize flasher');
+                }
+
+                button.textContent = 'Flashing...';
+                showStatus('info', 'Starting firmware flash...');
+                progressContainer.style.display = 'block';
+
+                // Configure flasher
+                const config = {
+                    fileArray: [{
+                        file: '{{FIRMWARE_FILE}}',
+                        address: 0x10000
+                    }],
+                    flashSize: 'keep',
+                    eraseAll: false,
+                    compress: true,
+                    reportProgress: true,
+                    calculateMD5Hash: true
+                };
+
+                // Start flashing
+                await flasher.flash(config, (progress) => {
+                    const percent = Math.round(progress * 100);
+                    progressFill.style.width = percent + '%';
+                    progressText.textContent = percent + '%';
+
+                    if (percent === 100) {
+                        showStatus('success', 'Firmware flashed successfully! Please reset your device.');
+                        button.textContent = 'Flash Complete';
+                    }
+                });
+
+                isFlashing = false;
+
+            } catch (error) {
+                console.error('Flashing error:', error);
+                showStatus('error', 'Error during flashing: ' + error.message);
+                button.textContent = 'Retry Flashing';
+                button.disabled = false;
+                isFlashing = false;
+                progressContainer.style.display = 'none';
+            }
+        }
+
+        // Show status message
+        function showStatus(type, message) {
+            const status = document.getElementById('status');
+            status.className = `status ${type}`;
+            status.textContent = message;
+            status.style.display = 'block';
+        }
+
+        // Add some helpful debugging
+        window.addEventListener('load', () => {
+            console.log('ESP32 Web Flasher page loaded');
+            console.log('Firmware:', '{{FIRMWARE_FILE}}');
+            console.log('Version:', '{{VERSION}}');
+            console.log('Role:', '{{ROLE}}');
+            
+            // Check library status after a short delay to allow fallback CDN to load
+            setTimeout(() => {
+                if (isFlasherAvailable()) {
+                    showStatus('info', 'ESP32 Web Flasher library loaded successfully. Ready to flash firmware.');
+                } else {
+                    showStatus('warning', 'ESP32 Web Flasher library not loaded. Trying alternative sources...');
+                    // Try to trigger fallback loading
+                    if (typeof ESPWebFlasher === 'undefined') {
+                        const script = document.createElement('script');
+                        script.src = 'https://cdn.jsdelivr.net/npm/esp-web-flasher@latest/dist/esp-web-flasher.js';
+                        script.onload = function() {
+                            if (typeof ESPWebFlasher !== 'undefined') {
+                                showStatus('success', 'ESP32 Web Flasher library loaded successfully. Ready to flash firmware.');
+                            }
+                        };
+                        script.onerror = function() {
+                            showStatus('error', 'Failed to load ESP32 Web Flasher library. Please check your internet connection and refresh the page.');
+                        };
+                        document.head.appendChild(script);
+                    }
+                }
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,129 @@
+# LtngDet PIO Heltec V3 OLED Project Overview
+
+## Project Purpose
+This is a **LoRa lightning detection system prototype** built on Heltec WiFi LoRa 32 V3 boards (ESP32-S3 + SX1262 + OLED). The system consists of sender and receiver nodes that communicate via LoRa radio for lightning detection and data transmission.
+
+## Core Architecture
+
+### Hardware Platform
+- **Board**: Heltec WiFi LoRa 32 V3 (ESP32-S3 + SX1262 + SSD1306 OLED)
+- **Radio**: SX1262 LoRa transceiver with configurable parameters
+- **Display**: 128x64 OLED with I2C interface (SDA=17, SCL=18)
+- **Interface**: GPIO0 button for mode switching and parameter adjustment
+- **Power**: Vext-controlled OLED power management
+
+### Software Stack
+- **Framework**: PlatformIO with Arduino framework
+- **Libraries**:
+  - RadioLib 6.5.0 for LoRa communication
+  - U8G2 2.36.0 for OLED display
+  - ESP32 core libraries for WiFi/OTA (receiver only)
+
+## Project Structure
+
+### Key Files
+- [platformio.ini](mdc:platformio.ini) - Build configuration with sender/receiver environments
+- [src/main.cpp](mdc:src/main.cpp) - Main application logic (794 lines)
+- [src/app_logic.h](mdc:src/app_logic.h) - Application logic interface
+- [src/app_logic.cpp](mdc:src/app_logic.cpp) - Application logic implementation
+- [test/test_app_logic.cpp](mdc:test/test_app_logic.cpp) - Unit tests
+- [CURSOR_PROJECT_STATUS.md](mdc:CURSOR_PROJECT_STATUS.md) - Detailed project status and progress
+
+### Build Environments
+- **sender**: LoRa transmitter with basic functionality
+- **receiver**: LoRa receiver with WiFi/OTA capabilities
+- **native**: Unit testing environment
+
+## Core Functionality
+
+### Dual-Mode Operation
+- **Sender Mode**: Transmits periodic PING messages and configuration updates
+- **Receiver Mode**: Receives messages, displays signal quality (RSSI/SNR), supports WiFi OTA updates
+
+### LoRa Configuration
+- **Frequency**: 915.0 MHz (configurable)
+- **Bandwidth**: 125/250/500 kHz (runtime adjustable)
+- **Spreading Factor**: SF7-SF12 (runtime adjustable)
+- **Coding Rate**: 4/5 (fixed)
+- **TX Power**: 10-22 dBm (configurable)
+
+### User Interface
+- **Button Actions**:
+  - Short press (<1s): Toggle Sender/Receiver mode
+  - Medium press (1-3s): Cycle Spreading Factor
+  - Long press (>3s): Cycle Bandwidth
+- **OLED Display**: Shows current mode, LoRa settings, and signal quality
+
+### Communication Protocol
+- **Control Channel**: Dedicated frequency for configuration synchronization
+- **Data Messages**: PING sequences and configuration broadcasts
+- **Auto-Sync**: Senders broadcast config changes, receivers automatically apply them
+
+## Development Status
+
+### ✅ Completed Features
+- LoRa radio communication (SX1262)
+- OLED display with U8G2 library
+- Button interface with debouncing
+- Runtime LoRa parameter adjustment
+- Dual-mode operation (Sender/Receiver)
+- Configuration persistence (ESP32 Preferences)
+- WiFi and OTA support (receiver mode)
+
+### 🔧 Current Capabilities
+- Real-time LoRa parameter tuning
+- Automatic device synchronization
+- Signal quality monitoring
+- Non-blocking operation
+- Persistent settings storage
+
+### 🎯 Next Development Phase
+- AS3935 lightning sensor integration
+- LED ring control for visual feedback
+- Enhanced message protocols
+- Production PCB design
+
+## Key Technical Decisions
+
+### Library Choices
+- **U8G2 over Heltec**: Resolved OLED initialization conflicts
+- **RadioLib**: Professional-grade LoRa library with SX1262 support
+- **PlatformIO**: Modern embedded development workflow
+
+### Architecture Patterns
+- **Non-blocking design**: Responsive UI without blocking delays
+- **Configuration broadcasting**: Automatic device synchronization
+- **Persistent storage**: ESP32 Preferences for settings retention
+- **Modular code**: Separated app logic for testability
+
+## Build and Deployment
+
+### Commands
+```bash
+# Build sender
+pio run -e sender
+
+# Build receiver
+pio run -e receiver
+
+# Upload with monitor
+pio run -e sender --target upload && pio device monitor
+```
+
+### Configuration
+- Default environment: `sender`
+- Monitor speed: 115200 baud
+- Board: `heltec_wifi_lora_32_V3`
+- Platform: `espressif32`
+
+## Testing Strategy
+- **Unit Tests**: [test/test_app_logic.cpp](mdc:test/test_app_logic.cpp) for core logic
+- **Integration**: Sender/receiver communication validation
+- **Hardware**: Button responsiveness and OLED display
+- **Radio**: LoRa parameter adjustment and synchronization
+
+This project represents a complete embedded system prototype with professional-grade libraries, responsive user interface, and robust communication protocols - ready for lightning sensor integration and field deployment.
+---
+alwaysApply: true
+description: Comprehensive overview of the LtngDet PIO Heltec V3 OLED project - a LoRa lightning detection system prototype
+---

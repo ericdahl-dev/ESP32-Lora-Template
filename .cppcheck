@@ -1,0 +1,27 @@
+# Cppcheck configuration to suppress external library warnings
+# This allows us to focus on our own code quality without external noise
+
+# Suppress all issues from external library directories
+--suppress=all:.pio/libdeps/
+--suppress=all:.pio/build/
+--suppress=all:framework-arduinoespressif32/
+
+# Suppress specific common external library issues
+--suppress=noExplicitConstructor:*.h
+--suppress=cstyleCast:*.h
+--suppress=unusedFunction:*.h
+--suppress=missingInclude:*.h
+--suppress=unusedVariable:*.h
+
+# Focus only on our source code
+--enable=all
+--suppress=missingIncludeSystem
+--suppress=unusedFunction
+
+# Include only our source directories
+--includes-file=src/
+--includes-file=test/
+
+# Output format for better integration
+--xml-version=2
+--output-file=cppcheck-result.xml

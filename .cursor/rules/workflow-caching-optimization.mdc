@@ -1,0 +1,92 @@
+# Workflow Caching Optimization Rule
+
+Always implement comprehensive caching strategies in GitHub Actions workflows to maximize performance and reduce redundant operations.
+
+## 🚀 **Required Caching Layers**
+
+### **1. PlatformIO Core & Libraries Cache**
+```yaml
+- name: Cache PlatformIO Core & Libraries
+  uses: actions/cache@v4
+  with:
+    path: |
+      ~/.platformio
+      .pio/libdeps
+    key: ${{ runner.os }}-pio-${{ matrix.environment }}-${{ hashFiles('**/platformio.ini', '**/lib_deps') }}
+    restore-keys: |
+      ${{ runner.os }}-pio-${{ matrix.environment }}-
+      ${{ runner.os }}-pio-
+```
+
+### **2. Python Package Cache**
+```yaml
+- name: Cache Python packages
+  uses: actions/cache@v4
+  with:
+    path: ~/.cache/pip
+    key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-platformio
+    restore-keys: |
+      ${{ runner.os }}-pip-platformio
+      ${{ runner.os }}-pip-
+```
+
+### **3. Build Artifacts Cache**
+```yaml
+- name: Cache Build Artifacts
+  uses: actions/cache@v4
+  with:
+    path: |
+      .pio/build
+      .pio/.tmpdir
+    key: ${{ runner.os }}-build-${{ matrix.environment }}-${{ hashFiles('src/**', 'include/**', '**/platformio.ini') }}
+    restore-keys: |
+      ${{ runner.os }}-build-${{ matrix.environment }}-
+      ${{ runner.os }}-build-
+```
+
+## 🔧 **Cache Key Strategy**
+
+- **Source-based keys**: Include source file hashes for automatic invalidation
+- **Configuration-based keys**: Include `platformio.ini` and other config file hashes
+- **Environment-specific keys**: Use matrix environment in cache keys
+- **Hierarchical fallbacks**: Multiple restore-keys for partial cache hits
+
+## 📊 **Performance Targets**
+
+- **Cache Hit Rate**: >85% on subsequent runs
+- **Time Reduction**: 40-70% faster than baseline
+- **Storage Efficiency**: <500MB total cache size
+
+## 📁 **Reference Files**
+
+- [CI_CACHING_OPTIMIZATION.md](mdc:CI_CACHING_OPTIMIZATION.md) - Comprehensive caching documentation
+- [.github/workflows/ci.yml](mdc:.github/workflows/ci.yml) - CI workflow with optimized caching
+- [.github/workflows/release.yml](mdc:.github/workflows/release.yml) - Release workflow with caching
+
+## ⚠️ **Common Pitfalls to Avoid**
+
+1. **Missing restore-keys**: Always provide fallback cache keys
+2. **Overly specific keys**: Don't make cache keys too granular
+3. **Missing path exclusions**: Cache only necessary directories
+4. **No cache invalidation**: Ensure keys change when dependencies change
+
+## 🎯 **Implementation Checklist**
+
+- [ ] PlatformIO core and libraries cached
+- [ ] Python packages cached
+- [ ] Build artifacts cached
+- [ ] Environment-specific cache keys
+- [ ] Hierarchical restore keys
+- [ ] Source file hash-based invalidation
+- [ ] Configuration file hash-based invalidation
+- [ ] Cache performance monitoring
+
+## 📈 **Expected Results**
+
+With proper caching implementation:
+- **First Run**: Baseline performance (cache miss)
+- **Subsequent Runs**: 60-80% faster execution
+- **Build Time**: 40-60% faster PlatformIO builds
+- **Overall Workflow**: 50-70% reduction in total time
+
+**Always prioritize caching optimization in workflow design - it's a fundamental requirement for efficient CI/CD pipelines.**

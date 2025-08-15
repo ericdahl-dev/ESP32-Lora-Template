@@ -1,0 +1,33 @@
+{
+  "name": "sbt-pio-web-flasher",
+  "version": "1.0.0",
+  "description": "Web-based ESP32 firmware flasher for SBT PIO Heltec V3 OLED",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --ext .js,.ts,.jsx,.tsx",
+    "lint:fix": "eslint . --ext .js,.ts,.jsx,.tsx --fix"
+  },
+  "dependencies": {
+    "esp-web-flasher": "^5.1.5"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0",
+    "eslint": "^8.55.0",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "@typescript-eslint/parser": "^6.13.0",
+    "eslint-plugin-import": "^2.29.0"
+  },
+  "keywords": [
+    "esp32",
+    "firmware",
+    "flasher",
+    "web",
+    "serial",
+    "platformio"
+  ],
+  "author": "SBT PIO Team",
+  "license": "MIT"
+}

@@ -1,0 +1,30 @@
+---
+alwaysApply: true
+description: Prefer GitHub MCP tools for GitHub interactions (issues/PRs/reviews/notifications/workflows) over shell/web when possible.
+---
+
+# GitHub MCP Preference
+
+Use the GitHub MCP tools by default for any GitHub action or data retrieval. The MCP layer handles auth and provides rich, structured responses.
+
+## When to use MCP (examples)
+- Auth/profile: use `get_me` to confirm identity and capabilities
+- Notifications/tasks: use `list_notifications` and `get_notification_details`
+- Issues: `create_issue`, `update_issue`, `get_issue`, `list_issues`, `add_issue_comment`
+- Pull requests:
+  - Discover: `list_pull_requests`, `search_pull_requests`
+  - Details: `get_pull_request`, `get_pull_request_files`, `get_pull_request_diff`, `get_pull_request_status`
+  - Reviews: `create_pending_pull_request_review`, `add_comment_to_pending_review`, `submit_pending_pull_request_review`, `get_pull_request_reviews`, `get_pull_request_comments`, `request_copilot_review`
+  - Management: `create_pull_request`, `update_pull_request`, `update_pull_request_branch`, `merge_pull_request`
+- Code/content: `get_file_contents`, `create_or_update_file`, `push_files`
+- Branches/tags: `create_branch`, `list_branches`, `get_tag`, `list_tags`
+- Workflows: `list_workflows`, `list_workflow_runs`, `get_workflow_run`, `get_workflow_run_usage`, `get_job_logs`, `run_workflow`, `rerun_workflow_run`, `rerun_failed_jobs`, `delete_workflow_run_logs`
+- Security/scanning: `list_code_scanning_alerts`, `get_code_scanning_alert`, `list_dependabot_alerts`, `get_dependabot_alert`, `list_secret_scanning_alerts`, `get_secret_scanning_alert`
+- Search: `search_repositories`, `search_users`, `search_orgs`, `search_code`, `search_issues`
+
+## Guidance
+- Prefer MCP over shell `git` for remote operations (reading PRs/issues, commenting, merging, running workflows, pushing single files).
+- Use local shell `git` for local workspace version control only; when pushing content directly to GitHub without a local branch, prefer `push_files` or `create_or_update_file`.
+- Never paste tokens; MCP manages credentials.
+- When referencing PRs/Issues in messages, link like `[PR #123](https://github.com/org/repo/pull/123)`.
+

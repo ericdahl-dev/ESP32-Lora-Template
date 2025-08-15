@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SBT PIO Heltec V3 OLED - Web Flasher</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 300;
+        }
+
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            background: #fafbfc;
+        }
+
+        .section h2 {
+            margin-top: 0;
+            color: #24292e;
+            border-bottom: 2px solid #e1e5e9;
+            padding-bottom: 10px;
+        }
+
+        .status {
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            font-weight: 500;
+        }
+
+        .status.info {
+            background: #e3f2fd;
+            color: #1976d2;
+            border: 1px solid #bbdefb;
+        }
+
+        .status.success {
+            background: #e8f5e8;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+        }
+
+        .status.warning {
+            background: #fff3e0;
+            color: #f57c00;
+            border: 1px solid #ffcc02;
+        }
+
+        .status.error {
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #ffcdd2;
+        }
+
+        .flash-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .flash-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .flash-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .progress-container {
+            display: none;
+            margin: 20px 0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e1e5e9;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: 500;
+            color: #586069;
+        }
+
+        .version-info {
+            background: #f6f8fa;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #667eea;
+            margin: 15px 0;
+        }
+
+        .manual-upload {
+            background: #f6f8fa;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px dashed #d1d5da;
+        }
+
+        .upload-note {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+
+        .upload-note h4 {
+            margin-top: 0;
+            color: #856404;
+        }
+
+        .upload-note ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .upload-note li {
+            margin: 5px 0;
+        }
+
+        .project-description {
+            line-height: 1.7;
+        }
+
+        .project-description p {
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+            color: #24292e;
+        }
+
+        .project-description h4 {
+            color: #667eea;
+            margin: 25px 0 15px 0;
+            font-size: 1.2rem;
+            border-bottom: 2px solid #e1e5e9;
+            padding-bottom: 8px;
+        }
+
+        .project-description ul {
+            margin: 15px 0;
+            padding-left: 25px;
+        }
+
+        .project-description li {
+            margin: 8px 0;
+            color: #586069;
+        }
+
+        .project-description strong {
+            color: #24292e;
+        }
+
+        .project-description .highlight {
+            background: linear-gradient(120deg, #a8edea 0%, #fed6e3 100%);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .project-description ol {
+            margin: 15px 0;
+            padding-left: 25px;
+        }
+
+        .project-description ol li {
+            margin: 8px 0;
+            color: #586069;
+            counter-increment: step-counter;
+        }
+
+        .project-description ol li::marker {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .section:first-of-type {
+            margin-top: 0;
+        }
+
+        .section:last-of-type {
+            margin-bottom: 0;
+        }
+
+        .footer {
+            background: #24292e;
+            color: white;
+            margin-top: 40px;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            padding: 40px 30px 20px 30px;
+        }
+
+        .footer-section h4 {
+            color: #667eea;
+            margin: 0 0 15px 0;
+            font-size: 1.1rem;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 8px;
+        }
+
+        .footer-section ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .footer-section li {
+            margin: 8px 0;
+        }
+
+        .footer-section a {
+            color: #c6cbd1;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-section a:hover {
+            color: #667eea;
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding: 20px 30px;
+            border-top: 1px solid #444d56;
+            color: #8b949e;
+        }
+
+        .footer-bottom p {
+            margin: 0;
+            font-size: 0.9rem;
+        }
+
+        .firmware-selection {
+            margin: 25px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .firmware-selection h3 {
+            margin: 0 0 20px 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .device-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .device-option {
+            position: relative;
+        }
+
+        .device-option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .device-label {
+            display: flex;
+            align-items: flex-start;
+            padding: 20px;
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+
+        .device-option input[type="radio"]:checked + .device-label {
+            border-color: #667eea;
+            background: #f8f9ff;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+        }
+
+        .device-label:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+        }
+
+        .device-icon {
+            font-size: 2.5rem;
+            margin-right: 15px;
+            margin-top: 5px;
+        }
+
+        .device-info h4 {
+            margin: 0 0 8px 0;
+            color: #495057;
+            font-size: 1.2rem;
+        }
+
+        .device-info p {
+            margin: 0 0 12px 0;
+            color: #6c757d;
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+
+        .device-info ul {
+            margin: 0;
+            padding-left: 20px;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        .device-info li {
+            margin: 4px 0;
+        }
+
+        .selected-firmware-info {
+            margin: 25px 0;
+            padding: 20px;
+            background: #e8f4fd;
+            border-radius: 8px;
+            border: 1px solid #bee5eb;
+        }
+
+        .selected-firmware-info h3 {
+            margin: 0 0 15px 0;
+            color: #0c5460;
+            font-size: 1.3rem;
+        }
+
+        .firmware-details {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #bee5eb;
+        }
+
+        .firmware-details p {
+            margin: 0;
+            color: #0c5460;
+        }
+
+        .firmware-details .firmware-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .firmware-details .info-item {
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            border-left: 3px solid #667eea;
+        }
+
+        .firmware-details .info-item strong {
+            color: #495057;
+        }
+
+        @media (max-width: 768px) {
+            .device-options {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .footer-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                padding: 30px 20px 15px 20px;
+            }
+
+            .footer-bottom {
+                padding: 15px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>SBT PIO Heltec V3 OLED</h1>
+            <p>Web-based ESP32 Firmware Flasher</p>
+        </div>
+
+        <div class="content">
+            <div class="section">
+                <h2>🔬 About SBT PIO Heltec V3 OLED</h2>
+                <div class="project-description">
+                    <p><strong>SBT PIO Heltec V3 OLED</strong> is an advanced lightning detection system built around the Heltec WiFi LoRa 32 V3 development board. This project combines cutting-edge sensor technology with robust wireless communication to provide real-time lightning detection and environmental monitoring.</p>
+
+                    <h4>🚀 Key Features</h4>
+                    <ul>
+                        <li><strong>Lightning Detection:</strong> Advanced AS3935 lightning sensor for accurate storm monitoring</li>
+                        <li><strong>Dual Communication:</strong> WiFi for local networks and LoRa for long-range data transmission</li>
+                        <li><strong>Environmental Sensors:</strong> Built-in temperature, humidity, and pressure monitoring</li>
+                        <li><strong>OLED Display:</strong> Real-time status and sensor data visualization</li>
+                        <li><strong>Battery Management:</strong> Efficient power management with solar charging support</li>
+                    </ul>
+
+                    <h4>🏗️ System Architecture</h4>
+                    <ul>
+                        <li><strong>Sender Node:</strong> Collects sensor data and transmits via LoRa to receiver</li>
+                        <li><strong>Receiver Node:</strong> Receives LoRa transmissions and forwards data via WiFi</li>
+                        <li><strong>Web Interface:</strong> Real-time monitoring and data visualization</li>
+                        <li><strong>Data Logging:</strong> Comprehensive environmental and lightning event logging</li>
+                    </ul>
+
+                    <h4>🔧 Technical Specifications</h4>
+                    <ul>
+                        <li><strong>Microcontroller:</strong> ESP32-WROOM-32 with dual-core 240MHz processor</li>
+                        <li><strong>Wireless:</strong> WiFi 802.11 b/g/n and LoRa 433/868/915MHz</li>
+                        <li><strong>Display:</strong> 0.96" 128x64 OLED with I2C interface</li>
+                        <li><strong>Power:</strong> 3.3V operation with LiPo battery support</li>
+                        <li><strong>Development:</strong> Built with PlatformIO and Arduino framework</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>🌐 Web Flasher Technology</h2>
+                <div class="project-description">
+                    <p>This web-based firmware flasher leverages modern web technologies to provide a seamless ESP32 programming experience without requiring any software installation on your computer.</p>
+
+                    <h4>🔌 How It Works</h4>
+                    <ul>
+                        <li><strong>Web Serial API:</strong> Modern browser technology for direct USB communication</li>
+                        <li><strong>ESP32 Web Flasher:</strong> Professional-grade flashing library from Espressif</li>
+                        <li><strong>Automatic Detection:</strong> Automatically finds and downloads latest firmware releases</li>
+                        <li><strong>Progress Tracking:</strong> Real-time feedback during the flashing process</li>
+                        <li><strong>Cross-Platform:</strong> Works on Windows, macOS, and Linux</li>
+                    </ul>
+
+                    <h4>📱 Browser Requirements</h4>
+                    <ul>
+                        <li><strong>Chrome/Edge:</strong> Full Web Serial API support (recommended)</li>
+                        <li><strong>Firefox:</strong> Limited Web Serial API support</li>
+                        <li><strong>Safari:</strong> No Web Serial API support</li>
+                        <li><strong>Mobile:</strong> Limited support due to USB restrictions</li>
+                    </ul>
+
+                    <h4>🛡️ Safety Features</h4>
+                    <ul>
+                        <li><strong>Connection Verification:</strong> Ensures proper ESP32 connection before flashing</li>
+                        <li><strong>Progress Monitoring:</strong> Visual feedback throughout the process</li>
+                        <li><strong>Error Handling:</strong> Graceful failure recovery and user guidance</li>
+                        <li><strong>Firmware Validation:</strong> Checks firmware compatibility and integrity</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>🚀 Firmware Flashing</h2>
+                <p>Connect your ESP32 device and flash the latest firmware directly from your browser.</p>
+
+                <div class="firmware-selection">
+                    <h3>📡 Select Device Type</h3>
+                    <div class="device-options">
+                        <div class="device-option">
+                            <input type="radio" id="transmitter" name="deviceType" value="transmitter" checked>
+                            <label for="transmitter" class="device-label">
+                                <div class="device-icon">📡</div>
+                                <div class="device-info">
+                                    <h4>Transmitter (Sender)</h4>
+                                    <p>Collects sensor data and transmits via LoRa to receiver</p>
+                                    <ul>
+                                        <li>Lightning detection sensor</li>
+                                        <li>Environmental monitoring</li>
+                                        <li>LoRa transmission</li>
+                                        <li>Battery powered</li>
+                                    </ul>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div class="device-option">
+                            <input type="radio" id="receiver" name="deviceType" value="receiver">
+                            <label for="receiver" class="device-label">
+                                <div class="device-icon">📺</div>
+                                <div class="device-info">
+                                    <h4>Receiver</h4>
+                                    <p>Receives LoRa transmissions and forwards data via WiFi</p>
+                                    <ul>
+                                        <li>LoRa reception</li>
+                                        <li>WiFi connectivity</li>
+                                        <li>Data forwarding</li>
+                                        <li>Web interface</li>
+                                    </ul>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="selected-firmware-info">
+                    <h3>📦 Selected Firmware</h3>
+                    <div id="firmwareDetails" class="firmware-details">
+                        <p>Choose a device type above to see firmware details</p>
+                    </div>
+                </div>
+
+                <button id="flashButton" class="flash-button" disabled>
+                    🔌 Connect & Flash
+                </button>
+
+                <div id="status" class="status info">
+                    Initializing web flasher...
+                </div>
+
+                <div id="progressContainer" class="progress-container">
+                    <div class="progress-bar">
+                        <div id="progressFill" class="progress-fill"></div>
+                    </div>
+                    <div id="progressText" class="progress-text">Ready to flash</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>📦 Release Information</h2>
+                <div id="versionInfo" class="version-info">
+                    Loading latest release information...
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>📁 Manual Firmware Upload</h2>
+                <div class="manual-upload">
+                    <p>If you prefer to upload firmware files manually:</p>
+                    <input type="file" id="senderFile" accept=".bin" />
+                    <label for="senderFile">Sender Firmware (.bin)</label>
+                    <br><br>
+                    <input type="file" id="receiverFile" accept=".bin" />
+                    <label for="receiverFile">Receiver Firmware (.bin)</label>
+                </div>
+
+                <div class="upload-note">
+                    <h4>📋 Where to get firmware files:</h4>
+                    <ul>
+                        <li><strong>GitHub Releases:</strong> Download from the latest release on this repository</li>
+                        <li><strong>Local Build:</strong> Build firmware locally using PlatformIO</li>
+                        <li><strong>Custom Firmware:</strong> Use your own compiled firmware files</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>🚀 Getting Started</h2>
+                <div class="project-description">
+                    <h4>📋 Prerequisites</h4>
+                    <ul>
+                        <li><strong>Hardware:</strong> Heltec WiFi LoRa 32 V3 board</li>
+                        <li><strong>USB Cable:</strong> Data cable (not just charging cable)</li>
+                        <li><strong>Browser:</strong> Chrome or Edge (recommended)</li>
+                        <li><strong>Firmware:</strong> Latest release from GitHub or local build</li>
+                    </ul>
+
+                    <h4>🔌 Flashing Steps</h4>
+                    <ol>
+                        <li><strong>Connect Device:</strong> Plug your ESP32 into USB port</li>
+                        <li><strong>Enter Bootloader:</strong> Hold BOOT button while pressing RESET (if needed)</li>
+                        <li><strong>Click Flash:</strong> Press the "Connect & Flash" button above</li>
+                        <li><strong>Select Port:</strong> Choose your device from the browser dialog</li>
+                        <li><strong>Wait for Completion:</strong> Monitor progress and wait for success message</li>
+                    </ol>
+
+                    <h4>⚠️ Troubleshooting</h4>
+                    <ul>
+                        <li><strong>Device Not Detected:</strong> Try different USB cable or port</li>
+                        <li><strong>Permission Denied:</strong> Ensure browser has USB access permissions</li>
+                        <li><strong>Flashing Fails:</strong> Check device is in bootloader mode</li>
+                        <li><strong>Browser Issues:</strong> Try Chrome/Edge with latest updates</li>
+                        <li><strong>Firmware Errors:</strong> Verify firmware file is correct for your device</li>
+                    </ul>
+
+                    <h4>🔧 Port Opening Issues</h4>
+                    <p><strong>If you get "Failed to open serial port" error:</strong></p>
+                    <ul>
+                        <li><strong>Download Mode:</strong> ESP32 must be in download mode (hold BOOT button while connecting)</li>
+                        <li><strong>USB Cable:</strong> Use a data cable, not just a charging cable</li>
+                        <li><strong>Other Apps:</strong> Close any other applications using the serial port</li>
+                        <li><strong>Reconnect:</strong> Unplug and reconnect the device</li>
+                        <li><strong>Port Selection:</strong> Make sure you selected the correct port in the browser dialog</li>
+                    </ul>
+
+                    <h4>📱 Download Mode Instructions</h4>
+                    <ol>
+                        <li><strong>Hold BOOT:</strong> Press and hold the BOOT button on your ESP32</li>
+                        <li><strong>Press RESET:</strong> While holding BOOT, press and release the RESET button</li>
+                        <li><strong>Release BOOT:</strong> Release the BOOT button</li>
+                        <li><strong>Connect USB:</strong> The device should now be in download mode and ready for flashing</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>🔗 Project Links</h4>
+                    <ul>
+                        <li><a href="https://github.com/Skeyelab/LightningDetector" target="_blank">GitHub Repository</a></li>
+                        <li><a href="https://github.com/Skeyelab/LightningDetector/releases" target="_blank">Latest Releases</a></li>
+                        <li><a href="https://github.com/Skeyelab/LightningDetector/issues" target="_blank">Report Issues</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>📚 Documentation</h4>
+                    <ul>
+                        <li><a href="https://docs.platformio.org/" target="_blank">PlatformIO Docs</a></li>
+                        <li><a href="https://docs.espressif.com/projects/esp-idf/en/latest/" target="_blank">ESP-IDF Docs</a></li>
+                        <li><a href="https://heltec.org/project/wifi-lora-32-v3/" target="_blank">Heltec V3 Specs</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>🤝 Support</h4>
+                    <ul>
+                        <li><a href="https://github.com/Skeyelab/LightningDetector/discussions" target="_blank">Community Discussions</a></li>
+                        <li><a href="https://github.com/Skeyelab/LightningDetector/wiki" target="_blank">Project Wiki</a></li>
+                        <li><a href="mailto:support@skeyelab.com">Email Support</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 SBT PIO Team. Built with ❤️ for the ESP32 community.</p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+</body>
+</html>

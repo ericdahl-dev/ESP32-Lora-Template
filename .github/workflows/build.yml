@@ -1,0 +1,119 @@
+name: Build PlatformIO Project
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'src/**'
+      - 'include/**'
+      - '**/platformio.ini'
+      - '**/lib_deps'
+      - 'requirements.txt'
+      - '!SESSION_NOTES.md'
+      - '!README.md'
+      - '!docs/**'
+      - '!*.md'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'src/**'
+      - 'include/**'
+      - '**/platformio.ini'
+      - '**/lib_deps'
+      - 'requirements.txt'
+      - '!SESSION_NOTES.md'
+      - '!README.md'
+      - '!docs/**'
+      - '!*.md'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+
+    - name: Cache PlatformIO Core & Libraries
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.platformio
+          .pio/libdeps
+        key: ${{ runner.os }}-pio-build-${{ hashFiles('**/platformio.ini', '**/lib_deps') }}
+        restore-keys: |
+          ${{ runner.os }}-pio-build-
+          ${{ runner.os }}-pio-
+
+    - name: Cache Python packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-platformio
+        restore-keys: |
+          ${{ runner.os }}-pip-platformio
+          ${{ runner.os }}-pip-
+
+    - name: Cache Build Artifacts
+      uses: actions/cache@v4
+      with:
+        path: |
+          .pio/build
+        key: ${{ runner.os }}-build-all-envs-${{ hashFiles('src/**', 'include/**', '**/platformio.ini') }}
+        restore-keys: |
+          ${{ runner.os }}-build-all-envs-
+          ${{ runner.os }}-build-
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Install PlatformIO
+      run: |
+        python -m pip install --upgrade pip
+        pip install platformio
+
+    - name: Install Dependencies
+      run: |
+        # Check if libraries already exist to avoid redundant installs
+        if [ ! -d ".pio/libdeps/sender/RadioLib" ] || [ ! -d ".pio/libdeps/receiver/RadioLib" ]; then
+          pio lib install "jgromes/RadioLib@^6.5.0"
+        fi
+        if [ ! -d ".pio/libdeps/sender/U8g2" ] || [ ! -d ".pio/libdeps/receiver/U8g2" ]; then
+          pio lib install "olikraus/U8g2@^2.36.0"
+        fi
+
+    - name: Build Sender Environment
+      run: |
+        pio run -e sender
+
+    - name: Build Receiver Environment
+      run: |
+        pio run -e receiver
+
+    - name: Check Build Artifacts
+      run: |
+        echo "Build completed successfully!"
+        echo "Sender firmware size:"
+        ls -la .pio/build/sender/firmware.bin
+        echo "Receiver firmware size:"
+        ls -la .pio/build/receiver/firmware.bin
+
+    - name: Upload Firmware Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: firmware-binaries
+        path: |
+          .pio/build/sender/firmware.bin
+          .pio/build/receiver/firmware.bin
+        retention-days: 30
+
+    - name: Upload Build Reports
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: build-reports
+        path: |
+          .pio/build/*/
+        retention-days: 7

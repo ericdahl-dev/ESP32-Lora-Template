@@ -1,0 +1,48 @@
+{
+  "version": "1.0.0",
+  "release_date": "2025-01-14",
+  "release_notes": "Initial release with basic lightning detection functionality",
+  "firmware_files": {
+    "transmitter": {
+      "filename": "sender_firmware_v1.0.0.bin",
+      "size": 512000,
+      "checksum": "sha256:a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef12345678",
+      "description": "Lightning detection transmitter firmware",
+      "features": [
+        "AS3935 Lightning Sensor",
+        "Environmental Sensors",
+        "LoRa Transmission",
+        "Battery Powered"
+      ],
+      "target_board": "Heltec WiFi LoRa 32 V3",
+      "mcu": "ESP32-S3"
+    },
+    "receiver": {
+      "filename": "receiver_firmware_v1.0.0.bin",
+      "size": 458000,
+      "checksum": "sha256:b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef1234567890",
+      "description": "LoRa reception and WiFi data forwarding device",
+      "features": [
+        "LoRa Reception",
+        "WiFi Connectivity",
+        "Data Forwarding",
+        "Web Interface"
+      ],
+      "target_board": "Heltec WiFi LoRa 32 V3",
+      "mcu": "ESP32-S3"
+    }
+  },
+  "compatibility": {
+    "min_esp_idf": "4.4.0",
+    "min_arduino": "2.0.0",
+    "supported_boards": [
+      "Heltec WiFi LoRa 32 V3",
+      "Heltec Wireless Tracker"
+    ]
+  },
+  "installation": {
+    "flash_size": "8MB",
+    "partition_scheme": "default",
+    "upload_speed": "921600"
+  }
+}
