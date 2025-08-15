@@ -22,6 +22,27 @@
 
 ### Session log
 
+#### 2025-08-15 14:25 UTC
+- Context: Fixed commit author information throughout git history from edahl@nd.edu to Skeyelab
+- Changes:
+  - Updated git config to use "Skeyelab" <eric@skeyelab.com> for future commits
+  - Used git filter-branch to rewrite all commit authors in git history
+  - Changed all commits from "Eric Dahl <edahl@nd.edu>" to "Skeyelab <eric@skeyelab.com>"
+  - Successfully force-pushed corrected history to GitHub
+- Commands run:
+  - `git config user.name "Skeyelab"`
+  - `git config user.email "eric@skeyelab.com"`
+  - `git filter-branch --force --env-filter '...' --tag-name-filter cat -- --branches --tags`
+  - `rm -rf .git/refs/original/`
+  - `git reflog expire --expire=now --all`
+  - `git gc --prune=now --aggressive`
+  - `git push --force-with-lease origin main`
+- Files touched:
+  - Git history (updated all commit authors)
+  - Git config (updated user.name and user.email)
+- Next steps:
+  - All future commits will use correct Skeyelab author information
+
 #### 2025-08-15 14:20 UTC
 - Context: Resolved GitHub push protection violation caused by secret in .cursor/mcp.json
 - Changes:
