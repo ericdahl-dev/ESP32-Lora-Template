@@ -1,188 +1,118 @@
-# Lightning Detection System - PlatformIO Heltec V3
+# ESP32 Modular Device Template
 
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/Skeyelab/LightningDetector)
-[![Tests](https://img.shields.io/badge/tests-112%20passing-brightgreen)](./run_tests.sh)
 [![Platform](https://img.shields.io/badge/platform-ESP32--S3-blue)](https://docs.espressif.com/projects/esp-idf/en/latest/esp32s3/)
 [![Framework](https://img.shields.io/badge/framework-Arduino-red)](https://www.arduino.cc/)
+[![PlatformIO](https://img.shields.io/badge/build-PlatformIO-orange)](https://platformio.org/)
+[![HAL Tests](https://img.shields.io/badge/HAL_tests-51_passing-brightgreen)](./run_tests.sh)
 
-A distributed lightning detection system built for Heltec WiFi LoRa 32 V3 boards with ESP32-S3, featuring modular architecture, comprehensive hardware abstraction, and GPS tracking capabilities.
+A production-ready, modular template for ESP32 projects featuring a comprehensive Hardware Abstraction Layer (HAL), extensive test coverage, and a clean architecture that makes it easy to build any IoT device.
 
-> **📘 ESP32 Template**: This project's modular architecture makes it an excellent template for general ESP32 development. See [README_TEMPLATE.md](README_TEMPLATE.md) for using this codebase as a starting point for your own ESP32 projects.
+## 🎯 Why Use This Template?
 
-## 🚀 Features
+This template provides a solid foundation for ESP32 projects with:
 
-### Core Functionality
-- **Lightning Detection** - AS3935 sensor integration with noise filtering
-- **LoRa Communication** - Long-range data transmission using SX1262 radio
-- **GPS Tracking** - UC6580 GNSS support for precise location data
-- **OLED Display** - Real-time status and data visualization
-- **WiFi Connectivity** - Multi-network support with automatic fallback
-- **OTA Updates** - Over-the-air firmware updates via WiFi
+- **Modular Architecture** - Clean separation of concerns with hardware abstraction
+- **Production Ready** - Comprehensive error handling, logging, and testing
+- **Easy to Extend** - Simple patterns for adding new sensors, actuators, and features
+- **Well Tested** - 51+ unit tests covering critical functionality
+- **Professional CI/CD** - GitHub Actions with optimized caching
+- **OTA Updates** - Built-in over-the-air update capability
+- **Web Flasher** - Browser-based firmware upload tool
 
-### Hardware Abstraction Layer (HAL)
-- **Modular Design** - Clean hardware abstraction for easy portability
-- **Comprehensive API** - GPIO, I2C, SPI, PWM, ADC, Timer, Power, Memory management
-- **Test Coverage** - 51 unit tests ensuring reliability
-- **ESP32-S3 Optimized** - Tailored for Heltec WiFi LoRa 32 V3 hardware
+## 🚀 Quick Start
 
-### Advanced Features
-- **Multi-Board Support** - Sender/receiver architecture
-- **Power Management** - Sleep modes and battery monitoring
-- **Error Handling** - Robust error detection and recovery
-- **Debugging Tools** - Serial logging and diagnostic information
-- **Template Ready** - Use as a foundation for any ESP32 project (see [examples](examples/))
+### 1. Clone and Setup
 
-## 📋 Hardware Requirements
-
-### Supported Boards
-- **[Heltec WiFi LoRa 32 V3](https://heltec.org/project/wifi-lora-32-v3/)** - Main development board
-- **[Heltec Wireless Tracker](https://heltec.org/project/wireless-tracker/)** - GPS-enabled transmitter (upcoming)
-
-### Key Specifications
-- **MCU**: ESP32-S3 (240MHz, dual-core, 8MB Flash, 512KB SRAM)
-- **Radio**: SX1262 LoRa transceiver (915MHz)
-- **Display**: 128x64 OLED (SSD1306)
-- **GPS**: UC6580 GNSS (L1+L5/L2 dual frequency)
-- **Connectivity**: WiFi 802.11 b/g/n
-
-### Sensors & Peripherals
-- AS3935 Lightning sensor
-- Battery voltage monitoring
-- External GPIO expansion
-- I2C/SPI device support
-
-## 🛠️ Quick Start
-
-### Prerequisites
 ```bash
-# Install PlatformIO Core
+# Clone the template
+git clone https://github.com/ericdahl.dev/ESP32-Lora-Template.git my-iot-device
+cd my-iot-device
+
+# Remove the original git history
+rm -rf .git
+git init
+
+# Install PlatformIO
 pip install platformio
-
-# Clone the repository
-git clone https://github.com/Skeyelab/LightningDetector.git
-cd LightningDetector
 ```
 
-### Build Options
+### 2. Configure Your Hardware
 
-#### Sender (Lightning Detection Node)
-```bash
-# Build lightning detection transmitter
-pio run -e sender
+Edit `platformio.ini` to match your board:
 
-# Upload to device
-pio run -e sender -t upload
-
-# Monitor serial output
-pio device monitor
+```ini
+[env:my_device]
+platform = espressif32
+board = heltec_wifi_lora_32_V3  ; Change to your board
+framework = arduino
+monitor_speed = 115200
 ```
 
-#### Receiver (Base Station)
-```bash
-# Build base station with WiFi/OTA
-pio run -e receiver
+### 3. Implement Your Logic
 
-# Upload to device
-pio run -e receiver -t upload
-```
+Replace the example application logic in `src/app_logic.cpp`:
 
-## 🌐 Web Flasher
-
-### Browser-Based Firmware Flashing
-The project includes a web-based ESP32 firmware flasher that allows you to flash devices directly from your browser without installing additional software.
-
-#### Features
-- **🌐 Web Interface**: Flash ESP32 devices from any modern browser
-- **📱 Device Support**: Transmitter and receiver firmware flashing
-- **📁 File Upload**: Support for custom firmware files
-- **🔌 Serial Port**: Direct USB connection to ESP32 devices
-- **📊 Progress Tracking**: Real-time flashing progress and status updates
-
-#### Quick Start
-1. **Visit**: [Web Flasher](https://skeyelab.github.io/LightningDetector/)
-2. **Connect**: Plug your ESP32 device via USB
-3. **Select**: Choose device type (transmitter or receiver)
-4. **Flash**: Click "Connect & Flash" and follow the prompts
-
-#### Requirements
-- **Browser**: Chrome or Edge (Web Serial API support)
-- **Hardware**: ESP32 device in download mode
-- **USB Cable**: Data cable (not just charging cable)
-
-#### Manual Firmware Upload
-- Upload custom `.bin` files for transmitter or receiver
-- Support for both pre-built and custom firmware
-- Automatic file validation and size checking
-
-### Configuration
-
-#### WiFi Networks
 ```cpp
-// Copy and modify wifi_networks_example.h
-cp wifi_networks_example.h src/wifi_networks.h
-// Edit src/wifi_networks.h with your network credentials
-```
+#include "app_logic.h"
+#include "hardware/hardware_abstraction.h"
 
-#### Hardware Pins
-```cpp
-// Heltec V3 Pin Configuration (src/config/system_config.h)
-#define VEXT_PIN 36        // Power control
-#define OLED_RST_PIN 21    // OLED reset
-#define BUTTON_PIN 0       // User button
-#define LORA_NSS 8         // LoRa chip select
-#define LORA_DIO1 14       // LoRa interrupt
-```
+void AppLogic::setup() {
+    // Initialize your sensors/actuators
+    HAL::GPIO::pinMode(LED_PIN, OUTPUT);
 
-## 🧪 Testing
+    // Setup your custom hardware
+    myServo.attach(SERVO_PIN);
+    mySensor.begin();
+}
 
-### Run All Tests
-```bash
-# Execute comprehensive test suite
-./run_tests.sh
-```
+void AppLogic::loop() {
+    // Your main application logic
+    float reading = mySensor.read();
 
-### Individual Test Suites
-```bash
-# Hardware Abstraction Layer tests
-pio test -e native -f test_hardware_abstraction
-
-# Integration tests
-pio test -e native -f test_integration
-
-# WiFi functionality tests
-pio test -e native -f test_wifi_manager
-```
-
-### Static Analysis
-```bash
-# Code quality checks
-./run_static_analysis.sh
-
-# Clang-tidy analysis
-./run_tidy.sh
+    if (reading > THRESHOLD) {
+        HAL::GPIO::digitalWrite(LED_PIN, HIGH);
+        myServo.write(90);
+    }
+}
 ```
 
 ## 📁 Project Structure
 
 ```
-├── src/
-│   ├── hardware/              # Hardware Abstraction Layer
+ESP32-Lora-Template/
+├── src/                    # Source code
+│   ├── hardware/          # Hardware Abstraction Layer
 │   │   ├── hardware_abstraction.h
 │   │   └── hardware_abstraction.cpp
-│   ├── sensors/               # Sensor implementations
+│   ├── sensors/           # Sensor implementations
 │   │   ├── gps_sensor.h/.cpp
 │   │   ├── lightning_sensor.h
 │   │   └── sensor_interface.h
-│   ├── communication/         # Communication protocols
-│   ├── system/               # System management
-│   ├── config/               # Configuration files
-│   └── main.cpp              # Application entry point
-├── test/                     # Unit tests
-├── docs/                     # Additional documentation
-└── platformio.ini           # PlatformIO configuration
+│   ├── actuators/         # Actuator implementations
+│   │   └── actuator_interface.h
+│   ├── communication/     # Communication protocols
+│   │   └── communication_interface.h
+│   ├── system/           # System utilities
+│   │   ├── error_handler.h
+│   │   ├── logger.h
+│   │   └── state_machine.h
+│   ├── config/           # Configuration files
+│   │   └── system_config.h
+│   ├── app_logic.cpp/.h  # Main application logic
+│   ├── wifi_manager.cpp/.h # WiFi management
+│   └── main.cpp          # Entry point
+├── test/                  # Unit tests
+├── examples/             # Example implementations
+│   └── environmental_monitor/
+├── docs/                 # Documentation
+│   └── HAL_GUIDE.md
+├── web-flasher/          # Browser-based flasher
+└── platformio.ini        # Build configuration
 ```
 
-## 🔧 Hardware Abstraction Layer
+## 🛠️ Hardware Abstraction Layer (HAL)
+
+The HAL provides a clean interface to hardware functionality:
 
 ### GPIO Operations
 ```cpp
@@ -209,148 +139,209 @@ I2C::write(data, sizeof(data));
 I2C::endTransmission();
 ```
 
-### GPS Integration
-```cpp
-#include "sensors/gps_sensor.h"
-
-// Initialize GPS for Wireless Tracker
-GPS::Config config = GPS::getWirelessTrackerV11Config();
-GPS::initializeGPS(config);
-
-// Read GPS data
-if (GPS::hasGPSFix()) {
-    const GPS::Data& data = GPS::getGPSData();
-    printf("Position: %.6f, %.6f\n", data.latitude, data.longitude);
-}
-```
-
-## 📡 Communication Protocol
-
-### LoRa Messaging
-```cpp
-// Message format
-struct LightningMessage {
-    uint32_t timestamp;
-    float latitude;
-    float longitude;
-    uint16_t strike_count;
-    uint8_t noise_level;
-    uint16_t battery_mv;
-};
-```
-
-### WiFi Multi-Network
-- Automatic network selection
-- Connection priority management
-- Fallback mechanisms
-- OTA update support
-
-## 🔋 Power Management
-
-### Sleep Modes
+### Power Management
 ```cpp
 // Deep sleep for battery conservation
 Power::sleep(Power::Mode::DEEP_SLEEP, 300000); // 5 minutes
 
-// Wake on button press or timer
-```
-
-### Battery Monitoring
-```cpp
 // Check battery status
 float voltage = Power::getBatteryVoltage();
-uint8_t percent = Power::getBatteryPercent();
 ```
 
-## 📊 Monitoring & Debugging
-
-### Serial Logging
+### Memory Management
 ```cpp
-// Debug output levels
-#define LOG_DEBUG   0
-#define LOG_INFO    1
-#define LOG_WARN    2
-#define LOG_ERROR   3
+// Get free heap memory
+uint32_t free_heap = Memory::getFreeHeap();
+uint32_t largest_block = Memory::getLargestFreeBlock();
 ```
 
-### Performance Metrics
-- Memory usage tracking
-- LoRa transmission statistics
-- GPS fix quality monitoring
-- Power consumption analysis
+## 🔧 Adding New Features
 
-## 🤝 Contributing
+### Adding a Sensor
 
-### Development Workflow
-1. **Fork** the repository
-2. **Create** feature branch (`git checkout -b feature/new-sensor`)
-3. **Implement** changes with tests
-4. **Run** test suite (`./run_tests.sh`)
-5. **Submit** pull request
+1. Create sensor file in `src/sensors/`:
+```cpp
+// src/sensors/temperature_sensor.h
+#pragma once
+#include "hardware/hardware_abstraction.h"
+#include "sensor_interface.h"
 
-### Code Standards
-- Follow existing code style
-- Add unit tests for new features
-- Update documentation
-- Pass static analysis checks
+class TemperatureSensor : public SensorInterface {
+private:
+    uint8_t _pin;
+    
+public:
+    TemperatureSensor(uint8_t pin) : _pin(pin) {}
+    void initialize() override;
+    SensorData read() override;
+    bool isReady() const override;
+};
+```
 
-### Issue Tracking
-- [Hardware Abstraction Layer](https://github.com/Skeyelab/LightningDetector/issues/7) ✅ **COMPLETE**
-- [Modular Architecture](https://github.com/Skeyelab/LightningDetector/issues/14) 🚧 **IN PROGRESS**
+2. Implement the sensor:
+```cpp
+// src/sensors/temperature_sensor.cpp
+#include "temperature_sensor.h"
+using namespace HardwareAbstraction;
+
+void TemperatureSensor::initialize() {
+    GPIO::pinMode(_pin, GPIO::Mode::MODE_INPUT);
+}
+
+SensorData TemperatureSensor::read() {
+    // Read analog value and convert to temperature
+    int rawValue = analogRead(_pin);
+    float celsius = (rawValue * 3.3 / 4095.0) * 100;
+    
+    SensorData data;
+    data.value = celsius;
+    data.unit = "°C";
+    data.timestamp = millis();
+    return data;
+}
+```
+
+3. Use in your application:
+```cpp
+// src/app_logic.cpp
+#include "sensors/temperature_sensor.h"
+
+TemperatureSensor tempSensor(34); // GPIO34
+
+void AppLogic::setup() {
+    HardwareAbstraction::initialize();
+    tempSensor.initialize();
+}
+
+void AppLogic::loop() {
+    if (tempSensor.isReady()) {
+        SensorData data = tempSensor.read();
+        Serial.printf("Temperature: %.2f%s\n", data.value, data.unit.c_str());
+    }
+}
+```
+
+### Adding an Actuator
+
+Similar pattern for actuators in `src/actuators/`.
+
+## 📱 WiFi Configuration
+
+The template includes multi-network WiFi support:
+
+```cpp
+// wifi_networks_example.h
+const char* WIFI_SSIDS[] = {"Network1", "Network2", "Network3"};
+const char* WIFI_PASSWORDS[] = {"password1", "password2", "password3"};
+const int WIFI_NETWORK_COUNT = 3;
+```
+
+## 🔄 OTA Updates
+
+Enable over-the-air updates:
+
+```cpp
+// In your setup()
+WiFiManager::enableOTA("device-name", "ota-password");
+```
+
+## 🧪 Testing
+
+Run the comprehensive test suite:
+
+```bash
+./run_tests.sh
+```
+
+Add your own tests in `test/`:
+```cpp
+// test/test_my_sensor.cpp
+#include <unity.h>
+#include "sensors/my_sensor.h"
+
+void test_sensor_initialization() {
+    MySensor sensor(GPIO_NUM_34);
+    sensor.begin();
+    TEST_ASSERT_TRUE(sensor.isReady());
+}
+
+void setup() {
+    UNITY_BEGIN();
+    RUN_TEST(test_sensor_initialization);
+    UNITY_END();
+}
+```
+
+## 📦 Example Projects
+
+The `examples/` directory contains ready-to-use implementations:
+
+### Environmental Monitor
+```
+examples/environmental_monitor/
+├── README.md
+├── platformio.ini
+└── src/
+    └── main.cpp  # Temperature, humidity, air quality monitoring
+```
+
+For more examples and detailed implementations, see the [Examples README](examples/README.md).
+
+## 🌐 Web Flasher
+
+Flash firmware directly from a web browser:
+
+1. Build the flasher:
+```bash
+cd web-flasher
+npm install
+npm run build
+```
+
+2. Serve locally:
+```bash
+npm start
+```
+
+3. Or deploy to GitHub Pages for easy distribution.
+
+## 🔌 Supported Hardware
+
+### Tested Boards
+- Heltec WiFi LoRa 32 V3
+- ESP32-S3 DevKit
+- ESP32-WROOM-32
+- Add your board here!
+
+### Common Peripherals
+- OLED Displays (SSD1306, SH1106)
+- LoRa Modules (SX1262, SX1276)
+- GPS Modules (NEO-6M, NEO-8M)
+- Various I2C/SPI sensors
 
 ## 📚 Documentation
 
-- [WiFi Multi-Network Setup](./WIFI_MULTI_NETWORK_README.md)
-- [OTA Update Guide](./OTA_README.md)
-- [Troubleshooting Guide](./TROUBLESHOOTING.md)
-- [Static Analysis Results](./STATIC_ANALYSIS.md)
-- [CI Caching Optimization](./CI_CACHING_OPTIMIZATION.md)
-- [Project Status](./CURSOR_PROJECT_STATUS.md)
+- [Hardware Abstraction Layer Guide](docs/HAL_GUIDE.md)
+- [Template Configuration Guide](TEMPLATE_CONFIG_GUIDE.md)
+- [WiFi Multi-Network Setup](WIFI_MULTI_NETWORK_README.md)
+- [OTA Update Guide](OTA_README.md)
+- [Troubleshooting Guide](TROUBLESHOOTING.md)
+- [Static Analysis Results](STATIC_ANALYSIS.md)
 
-## 🎯 Roadmap
+## 🤝 Contributing
 
-### Phase 1: Foundation ✅
-- [x] Hardware Abstraction Layer
-- [x] GPS Integration (UC6580)
-- [x] Comprehensive Testing
-- [x] Build System Optimization
+Contributions are welcome! Please:
 
-### Phase 2: Lightning Detection 🚧
-- [ ] AS3935 Sensor Integration
-- [ ] Noise Filtering Algorithms
-- [ ] Calibration Procedures
-- [ ] Real-time Processing
-
-### Phase 3: Communication 🔮
-- [ ] LoRa Network Protocol
-- [ ] Message Encryption
-- [ ] Multi-hop Routing
-- [ ] Data Aggregation
-
-### Phase 4: Analytics 🔮
-- [ ] Storm Tracking
-- [ ] Prediction Models
-- [ ] Web Dashboard
-- [ ] Mobile App
+1. Fork the repository
+2. Create a feature branch
+3. Add tests for new functionality
+4. Ensure all tests pass
+5. Submit a pull request
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This template is open source and available under the MIT License.
 
 ## 🙏 Acknowledgments
 
-- **Heltec Automation** - Hardware platform and documentation
-- **Espressif Systems** - ESP32-S3 microcontroller and ESP-IDF
-- **RadioLib** - LoRa communication library
-- **U8g2** - OLED display library
-- **PlatformIO** - Development platform and toolchain
-
-## 📞 Support
-
-- **Issues**: [GitHub Issues](https://github.com/Skeyelab/LightningDetector/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/Skeyelab/LightningDetector/discussions)
-- **Documentation**: [Project Wiki](https://github.com/Skeyelab/LightningDetector/wiki)
-
----
-
-**Built with ❤️ for the lightning detection community**
+This template was originally based on a lightning detection system but has been generalized for broader ESP32 development use cases.
