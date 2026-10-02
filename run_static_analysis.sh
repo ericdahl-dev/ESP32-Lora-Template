@@ -54,7 +54,7 @@ analysis_envs=(
     "receiver-tidy:clang-tidy:Receiver Environment (clang-tidy)"
 )
 
-# Run all analyses
+# Run all analyses  # spelling: ok (plural noun)
 for env in "${analysis_envs[@]}"; do
     IFS=':' read -r env_name tool_name description <<< "$env"
     total_checks=$((total_checks + 1))
