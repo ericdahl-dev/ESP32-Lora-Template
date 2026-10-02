@@ -248,10 +248,10 @@ main() {
             show_cache_stats
             
             if [[ $analysis_failed -eq 0 ]]; then
-                echo "🎉 All clang-tidy analyses completed successfully!"
+                echo "🎉 All clang-tidy analyses completed successfully!"  # spelling: ok (plural noun)
                 exit 0
             else
-                echo "⚠️  Some analyses completed with warnings"
+                echo "⚠️  Some analyses completed with warnings"  # spelling: ok (plural noun)
                 exit 1
             fi
             ;;
