@@ -169,7 +169,7 @@ uint32_t largest_block = Memory::getLargestFreeBlock();
 class TemperatureSensor : public SensorInterface {
 private:
     uint8_t _pin;
-    
+
 public:
     TemperatureSensor(uint8_t pin) : _pin(pin) {}
     void initialize() override;
@@ -192,7 +192,7 @@ SensorData TemperatureSensor::read() {
     // Read analog value and convert to temperature
     int rawValue = analogRead(_pin);
     float celsius = (rawValue * 3.3 / 4095.0) * 100;
-    
+
     SensorData data;
     data.value = celsius;
     data.unit = "°C";

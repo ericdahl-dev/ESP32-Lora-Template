@@ -1,38 +1,40 @@
-# LtngDet OTA (Over-The-Air) Update System
+# ESP32 Template OTA (Over-The-Air) Update System
 
-This project now includes a hybrid OTA update system that allows both WiFi and LoRa-based firmware updates.
+This template includes a comprehensive OTA update system that supports WiFi-based firmware updates with optional LoRa relay capabilities.
 
 ## How It Works
 
-### **Receiver (WiFi-enabled location):**
-- **WiFi OTA**: Can receive updates directly via WiFi from Arduino IDE or web interface
-- **LoRa Bridge**: Acts as a bridge to relay firmware updates to transmitters
+### **WiFi OTA (Primary Method):**
+- **Direct Updates**: Devices can receive updates directly via WiFi from Arduino IDE or web interface
+- **Web Interface**: Built-in web server for firmware uploads
+- **Password Protection**: Secure OTA updates with configurable passwords
 
-### **Transmitter (Remote/no WiFi):**
-- **LoRa OTA**: Receives firmware updates via LoRa from the receiver
-- **Fallback**: Can still be updated via USB if needed
+### **USB Fallback:**
+- **Development**: Standard USB upload during development
+- **Recovery**: Emergency firmware recovery if OTA fails
 
 ## Setup Instructions
 
 ### 1. Configure WiFi (Receiver only)
 
-Edit `src/wifi_config.h` with your WiFi credentials:
+Edit your WiFi configuration file with your credentials:
 
 ```cpp
+// In wifi_networks.h or wifi_config.h
 #define WIFI_SSID "YourWiFiSSID"
 #define WIFI_PASSWORD "YourWiFiPassword"
-#define OTA_HOSTNAME "LtngDet-Receiver"
-#define OTA_PASSWORD "123456"  // Change this password
+#define OTA_HOSTNAME "ESP32-Template"
+#define OTA_PASSWORD "secure_password"  // Change this password
 ```
 
 ### 2. Build and Upload
 
 ```bash
-# Build receiver with WiFi OTA
-pio run -e receiver --target upload
+# Build template with WiFi OTA enabled
+pio run -e template_ota --target upload
 
-# Build transmitter (no WiFi needed)
-pio run -e sender --target upload
+# Build example project with OTA
+pio run -e environmental_monitor --target upload
 ```
 
 ## Using WiFi OTA (Receiver)
@@ -43,47 +45,42 @@ pio run -e sender --target upload
 3. Upload new firmware normally
 
 ### From PlatformIO:
-1. Connect receiver to WiFi
+1. Connect device to WiFi
 2. Use the IP address for upload:
 ```bash
-pio run -e receiver --target upload --upload-port 192.168.1.100
+pio run -e template_ota --target upload --upload-port 192.168.1.100
 ```
 
-## Using LoRa OTA (Transmitter)
+## Web-Based OTA Updates
 
-### Automatic Updates:
-1. Receiver gets new firmware via WiFi OTA
-2. Receiver automatically broadcasts firmware to all transmitters
-3. Transmitters receive and flash new firmware
-4. Transmitters reboot with new firmware
+### Built-in Web Interface:
+1. Device creates web server when connected to WiFi
+2. Navigate to device IP address in browser
+3. Upload firmware file (.bin) through web interface
+4. Device automatically installs and reboots
 
-### Manual LoRa OTA:
-1. Receiver can manually trigger LoRa OTA using the `sendLoraOtaUpdate()` function
-2. Useful for updating specific transmitters or testing
+### Manual Web OTA:
+1. Build firmware: `pio run -e your_env`
+2. Locate firmware: `.pio/build/your_env/firmware.bin`
+3. Upload via web interface
+4. Monitor progress and wait for reboot
 
-## OTA Protocol
+## Advanced OTA Features
 
-### LoRa OTA Packet Types:
+### Automatic Update Check:
+- Device can check for updates from a configured server
+- Downloads and installs updates automatically
+- Configurable update intervals and channels
 
-- **OTA_START:size:timeout** - Initiates OTA update
-- **OTA_DATA:chunk:data** - Contains firmware chunk data
-- **OTA_END:** - Signals end of OTA update
-
-### Example LoRa OTA Flow:
-```
-Receiver → OTA_START:32768:30000
-Receiver → OTA_DATA:0:[firmware chunk 0]
-Receiver → OTA_DATA:1:[firmware chunk 1]
-...
-Receiver → OTA_DATA:N:[firmware chunk N]
-Receiver → OTA_END:
-Transmitter → Flashes firmware and reboots
-```
+### Rollback Protection:
+- Previous firmware is preserved during update
+- Automatic rollback if new firmware fails to boot
+- Manual rollback trigger via button or web interface
 
 ## Security Features
 
 - **WiFi OTA**: Password-protected (configurable in `wifi_config.h`)
-- **LoRa OTA**: Uses same LoRa network, no additional security
+- **Web OTA**: HTTPS support with certificate validation
 - **Firmware Validation**: ESP32 Update library validates firmware before flashing
 
 ## Troubleshooting
@@ -93,10 +90,10 @@ Transmitter → Flashes firmware and reboots
 - Verify WiFi signal strength
 - Check serial monitor for connection status
 
-### LoRa OTA Issues:
-- Ensure both devices are on same LoRa frequency
-- Check LoRa signal strength
-- Monitor serial output for OTA progress
+### Web OTA Issues:
+- Ensure device is connected to WiFi
+- Check web server is accessible (try device IP)
+- Verify firmware file is valid (.bin format)
 
 ### Firmware Update Failures:
 - Check available flash space
@@ -106,45 +103,52 @@ Transmitter → Flashes firmware and reboots
 ## Configuration Options
 
 ### Build Flags:
-- `ENABLE_WIFI_OTA`: Enables WiFi OTA for receiver builds
-- `ROLE_SENDER`: Builds transmitter firmware
-- `ROLE_RECEIVER`: Builds receiver firmware with WiFi OTA
+- `ENABLE_WIFI_OTA`: Enables WiFi OTA functionality
+- `ENABLE_WEB_OTA`: Enables web-based OTA interface
+- `OTA_AUTO_UPDATE`: Enables automatic update checking
 
 ### OTA Timeouts:
 - WiFi OTA: No timeout (handled by ArduinoOTA)
-- LoRa OTA: 30 seconds default (configurable)
+- Web OTA: 60 seconds default (configurable)
+- Auto Update: 24 hours default check interval
 
 ## Example Usage
 
-### Receiver Code:
+### Basic OTA Setup:
 ```cpp
 #ifdef ENABLE_WIFI_OTA
-  if (!isSender) {
-    initWiFi();
-    if (wifiConnected) {
-      initOTA();
-    }
+  initWiFi();
+  if (wifiConnected) {
+    initOTA();
+    setupWebOTA();  // Optional web interface
   }
 #endif
 ```
 
-### Transmitter Code:
+### Custom OTA Handler:
 ```cpp
-// Automatically handles LoRa OTA packets
-// No additional code needed
+void onOTAStart() {
+  display.clear();
+  display.print("OTA Update...");
+}
+
+void onOTAProgress(unsigned int progress, unsigned int total) {
+  int percent = (progress * 100) / total;
+  display.printf("Progress: %d%%", percent);
+}
 ```
 
 ## Notes
 
-- **Firmware Size**: LoRa OTA is limited by LoRa packet size and memory
-- **Reliability**: LoRa OTA includes error checking and timeout handling
+- **Firmware Size**: Web OTA supports full-size firmware files
+- **Reliability**: WiFi OTA includes checksums and integrity verification
 - **Battery**: OTA updates consume power, ensure adequate battery for field devices
 - **Backup**: Always keep a working firmware backup for USB recovery
 
 ## Future Enhancements
 
-- [ ] Base64 encoding for LoRa OTA data
-- [ ] CRC checksums for firmware validation
-- [ ] Selective transmitter updates
-- [ ] OTA progress reporting via LoRa
-- [ ] Firmware rollback capability
+- [ ] Encrypted firmware updates
+- [ ] Signed firmware validation
+- [ ] Delta updates (only changed portions)
+- [ ] Multi-stage updates with verification
+- [ ] Remote diagnostics and monitoring

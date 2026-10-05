@@ -1,6 +1,6 @@
-# SBT PIO Web Flasher
+# ESP32 Template Web Flasher
 
-A web-based ESP32 firmware flasher for the SBT PIO Heltec V3 OLED project.
+A web-based ESP32 firmware flasher for the ESP32 Modular Device Template.
 
 ## 🚀 Features
 
@@ -72,6 +72,6 @@ This web flasher is automatically built and deployed to GitHub Pages when change
 
 ## 🔌 Hardware Requirements
 
-- ESP32 device (Heltec WiFi LoRa 32 V3)
+- ESP32 device (any supported board)
 - USB cable for serial connection
 - Modern browser with Web Serial API support

@@ -1,241 +1,333 @@
-# LtngDet LoRa + OLED Troubleshooting Guide - Heltec V3
+# ESP32 Template Troubleshooting Guide
 
-## Current Status: ✅ FULLY FUNCTIONAL
+## Common Issues and Solutions
 
-### Resolved Issues
-- **OLED Display**: Working with U8G2 library
-- **LoRa Communication**: Working with RadioLib
-- **Button Interface**: Working with GPIO0
-- **Library Conflicts**: Resolved by removing Heltec library
+This guide helps resolve common issues when using the ESP32 template for your projects.
+
+### Hardware Abstraction Layer Issues
+- **GPIO Configuration**: Ensure proper pin modes and pull-up/pull-down settings
+- **I2C Communication**: Check SDA/SCL pin assignments and device addresses
+- **SPI Communication**: Verify MOSI/MISO/SCK/CS pin connections
+- **Power Management**: Ensure proper voltage levels and power sequencing
 
 ## Button Interface Troubleshooting
 
 ### Issue: Button Not Responding
-**Symptoms**: Button presses don't change modes or parameters
+**Symptoms**: Button presses don't trigger expected actions
 **Possible Causes**:
 - Button pin not properly configured
 - Pull-up resistor not enabled
 - Main loop delays blocking button detection
 
 **Solutions**:
-1. **Check Button Configuration**:
+1. **Check Button Configuration using HAL**:
 ```cpp
-pinMode(BUTTON_PIN, INPUT_PULLUP);  // Must be INPUT_PULLUP
+using namespace HardwareAbstraction;
+GPIO::pinMode(BUTTON_PIN, GPIO::Mode::MODE_INPUT_PULLUP);
 ```
 
-2. **Verify Button Pin**:
+2. **Verify Button Pin Assignment**:
 ```cpp
-#define BUTTON_PIN 0  // GPIO0 (BOOT button)
+#define BUTTON_PIN 0  // GPIO0 (BOOT button) or your chosen pin
 ```
 
-3. **Check for Blocking Delays**:
+3. **Use Non-blocking Code**:
 ```cpp
 // WRONG - blocks button detection
 delay(2000);
 
 // CORRECT - non-blocking timing
-if (now - lastTxMs >= 2000) {
+if (millis() - lastUpdate >= 2000) {
   // do something
+  lastUpdate = millis();
 }
 ```
 
 ### Issue: Button Too Sensitive/Not Sensitive Enough
 **Symptoms**: Button triggers on slight touch or requires very long press
 **Solutions**:
-1. **Adjust Debounce Time**:
+1. **Implement Debouncing**:
 ```cpp
-if (pressDuration < 100) {  // Increase for less sensitivity
-  // Very short press - ignore (debounce)
+class Button {
+private:
+    uint8_t pin;
+    unsigned long lastPress = 0;
+    const unsigned long debounceDelay = 50;
+public:
+    bool isPressed() {
+        if (GPIO::digitalRead(pin) == LOW &&
+            millis() - lastPress > debounceDelay) {
+            lastPress = millis();
+            return true;
+        }
+        return false;
+    }
+};
+```
+
+2. **Adjust Sensitivity**:
+```cpp
+const unsigned long SHORT_PRESS = 100;
+const unsigned long LONG_PRESS = 1000;
+
+if (pressDuration > SHORT_PRESS && pressDuration < LONG_PRESS) {
+    // Short press action
+} else if (pressDuration >= LONG_PRESS) {
+    // Long press action
 }
 ```
 
-2. **Adjust Press Duration Thresholds**:
-```cpp
-} else if (pressDuration < 1000) {     // Short press threshold
-  // Toggle mode
-} else if (pressDuration < 3000) {     // Medium press threshold
-  // Cycle SF
-} else {                               // Long press threshold
-  // Cycle BW
-}
-```
+## Communication Issues
 
-## LoRa Parameter Synchronization
-
-### Issue: Devices Can't Communicate
-**Symptoms**: Sender transmits but receiver doesn't receive
-**Root Cause**: LoRa parameters don't match between devices
-
-**Required Matching Parameters**:
-- **Frequency**: Must be identical (915.0 MHz)
-- **Bandwidth**: Must be identical (125/250/500 kHz)
-- **Spreading Factor**: Must be identical (SF7-SF12)
-- **Coding Rate**: Must be identical (CR5)
+### Issue: WiFi Connection Problems
+**Symptoms**: Device cannot connect to WiFi network
+**Root Cause**: Network configuration or signal issues
 
 **Solutions**:
-1. **Check OLED Display**: Both devices should show identical bottom lines
-2. **Manual Synchronization**: Use button to match parameters
-3. **Reset to Defaults**: Power cycle both devices to reset to default values
+1. **Check Network Configuration**:
+```cpp
+// Verify WiFi credentials in wifi_networks.h
+const char* WIFI_SSIDS[] = {"YourNetwork"};
+const char* WIFI_PASSWORDS[] = {"YourPassword"};
+```
 
-### Issue: Parameter Changes Not Taking Effect
-**Symptoms**: Button press changes OLED display but communication still fails
+2. **Debug Connection Process**:
+```cpp
+Serial.printf("Connecting to %s...\n", WIFI_SSID);
+WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+}
+Serial.println("Connected!");
+```
+
+3. **Check Signal Strength**:
+```cpp
+int rssi = WiFi.RSSI();
+Serial.printf("Signal strength: %d dBm\n", rssi);
+```
+
+### Issue: Sensor Readings Inconsistent
+**Symptoms**: Sensor values fluctuate wildly or return invalid data
 **Possible Causes**:
-- Radio settings not properly applied
-- Parameter change failed silently
+- Improper sensor initialization
+- Power supply issues
+- Timing problems
 
 **Solutions**:
-1. **Check Serial Output**: Look for "Radio updated" or "Settings fail" messages
-2. **Verify Parameter Application**:
+1. **Proper Sensor Initialization**:
 ```cpp
-int st = radio.setSpreadingFactor(currentSF);
-if (st != RADIOLIB_ERR_NONE) {
-  Serial.printf("SF change failed: %d\n", st);
+void TemperatureSensor::initialize() {
+    GPIO::pinMode(sensorPin, GPIO::Mode::MODE_INPUT);
+    delay(100);  // Allow sensor to stabilize
 }
 ```
 
-3. **Force Radio Reconfiguration**:
+2. **Add Averaging for Stability**:
 ```cpp
-// Re-initialize radio with new parameters
-radio.begin(currentFreq, currentBW, currentSF, currentCR, 0x34, currentTxPower);
+float TemperatureSensor::readAverage(int samples) {
+    float sum = 0;
+    for (int i = 0; i < samples; i++) {
+        sum += read();
+        delay(10);
+    }
+    return sum / samples;
+}
 ```
 
-## OLED Display Troubleshooting
-
-### Issue: OLED Shows Nothing (RESOLVED)
-**Previous Problem**: Heltec library caused hangs
-**Solution**: Switched to U8G2 library with proper power management
-
-**Current Working Configuration**:
+3. **Check Power Supply**:
 ```cpp
-// Power management
-#define VEXT_PIN 36        // Vext control: LOW = ON
-#define OLED_RST_PIN 21    // OLED reset pin
-
-// I2C configuration
-Wire.begin(17, 18);       // SDA=17, SCL=18
-Wire.setClock(100000);    // 100kHz I2C clock
-
-// U8G2 setup
-U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
-u8g2.setI2CAddress(0x3C << 1);
-u8g2.setPowerSave(0);
-u8g2.setContrast(255);
+float voltage = Power::getBatteryVoltage();
+if (voltage < 3.0) {
+    Serial.println("Warning: Low battery voltage!");
+}
 ```
 
-### Issue: OLED Shows Garbled Text
+## Display Issues
+
+### Issue: OLED Display Not Working
+**Symptoms**: Display remains blank or shows garbage
+**Solutions**:
+
+**Check I2C Configuration using HAL**:
+```cpp
+using namespace HardwareAbstraction;
+
+// Initialize I2C
+I2C::initialize(SDA_PIN, SCL_PIN, 400000);
+
+// Test I2C communication
+uint8_t address = 0x3C;  // Common OLED address
+if (I2C::beginTransmission(address) && I2C::endTransmission()) {
+    Serial.println("OLED found on I2C bus");
+} else {
+    Serial.println("OLED not responding");
+}
+```
+
+**Verify Power Management**:
+```cpp
+// Ensure display power is enabled
+GPIO::pinMode(VEXT_PIN, GPIO::Mode::MODE_OUTPUT);
+GPIO::digitalWrite(VEXT_PIN, GPIO::Level::LEVEL_LOW);  // Enable power
+delay(100);
+```
+
+### Issue: Display Shows Garbled Text
 **Symptoms**: Text appears but is unreadable or corrupted
 **Solutions**:
-1. **Check Font Selection**:
+1. **Check Display Initialization**:
 ```cpp
-u8g2.setFont(u8g2_font_6x10_tr);  // Use appropriate font
+class OLEDDisplay {
+public:
+    void initialize() {
+        I2C::initialize(SDA_PIN, SCL_PIN);
+        // Send initialization sequence
+        sendCommand(0xAE);  // Display off
+        sendCommand(0xD5);  // Set clock
+        // ... other init commands
+        sendCommand(0xAF);  // Display on
+    }
+
+    void clear() {
+        // Clear display buffer
+        for (int i = 0; i < BUFFER_SIZE; i++) {
+            buffer[i] = 0;
+        }
+        sendBuffer();
+    }
+};
 ```
 
-2. **Verify Buffer Operations**:
-```cpp
-u8g2.clearBuffer();     // Clear before drawing
-u8g2.drawStr(0, 12, "Text");  // Draw text
-u8g2.sendBuffer();      // Send to display
-```
-
-## PlatformIO Configuration Issues
+## Build and Configuration Issues
 
 ### Check Board Definition
 Ensure the correct board is selected:
 ```ini
-[env:sender]
-board = heltec_wifi_lora_32_V3  # Must match exactly
+[env:my_device]
+board = esp32dev  # Or your specific board
+platform = espressif32
+framework = arduino
 ```
 
 ### Check Dependencies
-Current working configuration:
+Template working configuration:
 ```ini
 lib_deps =
-  jgromes/RadioLib@^6.5.0
-  olikraus/U8g2@^2.36.0
+    SPI
+    Wire
+    # Add libraries as needed for your project
+    # adafruit/Adafruit SSD1306  ; For OLED displays
+    # bblanchon/ArduinoJson     ; For JSON parsing
 ```
 
 ### Build Flags
-Ensure all necessary flags are set:
+Configure features for your project:
 ```ini
 build_flags =
-  -D HELTEC_V3_OLED=1
-  -D OLED_SDA=17
-  -D OLED_SCL=18
-  -D LORA_FREQ_MHZ=915.0
-  -D LORA_BW_KHZ=125.0
-  -D LORA_SF=9
-  -D LORA_CR=5
-  -D LORA_TX_DBM=17
+    -D ENABLE_WIFI=1
+    -D ENABLE_OTA=1
+    -D DEBUG_LEVEL=2
+    -D DEVICE_NAME="\"MyDevice\""
+    # Add your specific pin definitions
+    -D SDA_PIN=21
+    -D SCL_PIN=22
 ```
 
 ## Hardware Checks
 
-### USB Cable
+### USB Cable and Connection
 - Use high-quality data cable (not power-only)
 - Try different USB ports
 - Check if board shows up in device manager
+- Verify drivers are installed
 
 ### Power Supply
-- Ensure stable 3.3V power
-- Check for voltage drops during operation
-- Verify USB power is sufficient
+- Ensure stable power supply (3.3V for most sensors)
+- Check for voltage drops during high current operations
+- Monitor battery levels if using battery power
+- Verify USB power is sufficient for your peripherals
 
 ### Pin Connections
-- Verify SDA=17, SCL=18 are correct for your board
-- Check for pin conflicts with other peripherals
-- Ensure no short circuits
+- Double-check pin assignments in your configuration
+- Verify no pin conflicts between different peripherals
+- Ensure proper pull-up/pull-down resistors where needed
+- Check for short circuits or loose connections
+- Use HAL pin definitions for consistency:
+```cpp
+// Define pins in a central location
+namespace Pins {
+    const uint8_t LED = 2;
+    const uint8_t BUTTON = 0;
+    const uint8_t SDA = 21;
+    const uint8_t SCL = 22;
+}
+```
 
 ## Debug Steps
 
 ### Step 1: Verify Basic Operation
-Check that the system boots and shows status:
+Check that the system boots and initializes properly:
 1. Upload firmware
 2. Open serial monitor (115200 baud)
-3. Verify boot messages appear
-4. Check OLED shows current settings
+3. Verify boot messages and HAL initialization
+4. Check all peripherals are detected
 
-### Step 2: Test Button Interface
-1. **Short Press**: Should toggle between Sender/Receiver
-2. **Medium Press**: Should cycle through SF values
-3. **Long Press**: Should cycle through BW values
-4. OLED should update immediately for each change
+### Step 2: Test Hardware Abstraction Layer
+1. **GPIO Test**: Toggle LEDs or read button states
+2. **I2C Test**: Scan for devices and test communication
+3. **SPI Test**: Verify SPI peripherals respond
+4. **Power Test**: Check voltage levels and power management
 
-### Step 3: Test LoRa Communication
-1. Set both devices to same parameters
-2. Set one as Sender, one as Receiver
-3. Verify packets are transmitted and received
-4. Check serial output for TX/RX messages
+### Step 3: Test Application Logic
+1. Verify sensors read valid data
+2. Test actuators respond correctly
+3. Check communication protocols work
+4. Validate data logging and storage
 
-### Step 4: Parameter Synchronization
-1. Change parameters on one device
-2. Match parameters on other device
-3. Verify communication resumes
+### Step 4: Integration Testing
+1. Test multiple systems working together
+2. Verify no conflicts between different components
+3. Check system performance under load
+4. Test error handling and recovery
 
 ## Common Error Codes
 
-### RadioLib Errors
-- `-1`: Invalid parameter
-- `-2`: Invalid state
-- `-3`: Timeout
-- `-4`: Hardware error
+### HAL Errors
+- `HAL_ERROR_INVALID_PIN`: Pin number out of range or invalid
+- `HAL_ERROR_INIT_FAILED`: Hardware initialization failed
+- `HAL_ERROR_TIMEOUT`: Operation timed out
+- `HAL_ERROR_NO_DEVICE`: Device not found on bus
 
-### U8G2 Errors
-- `false` from `oled.begin()`: I2C communication failed
-- No display output: Check I2C address and pins
+### WiFi Errors
+- `WL_NO_SSID_AVAIL`: Network not found
+- `WL_CONNECT_FAILED`: Authentication failed
+- `WL_CONNECTION_LOST`: Connection dropped
 
-## Next Actions
+### General ESP32 Errors
+- Boot loops: Check for memory issues or infinite loops
+- Brownout: Insufficient power supply
+- Guru meditation: Stack overflow or memory corruption
 
-1. **Test Communication**: Verify sender/receiver can communicate
-2. **Validate Parameters**: Ensure parameter changes work correctly
-3. **Stress Test**: Test button interface during active LoRa operation
-4. **Add Features**: Implement TX power adjustment and settings sync
+## Getting Help
+
+1. **Check Serial Output**: Most issues show error messages in serial monitor
+2. **Review Documentation**: Check the specific guides for your components
+3. **Test Incrementally**: Add one feature at a time to isolate issues
+4. **Use HAL Debug**: Enable HAL debugging for detailed hardware status
+
+```cpp
+#define HAL_DEBUG_LEVEL 3  // Enable verbose HAL debugging
+```
 
 ## Resources
-- [RadioLib Documentation](https://jgromes.github.io/RadioLib/)
-- [U8G2 Troubleshooting](https://github.com/olikraus/U8g2_Arduino/wiki/troubleshooting)
-- [ESP32-S3 I2C Guide](https://docs.espressif.com/projects/esp-idf/en/latest/esp32s3/api-reference/peripherals/i2c.html)
-- [Heltec V3 Documentation](https://docs.heltec.org/en/wifi_lora_32_v3/)
+- [ESP32 Documentation](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/)
+- [Arduino ESP32 Core](https://github.com/espressif/arduino-esp32)
+- [PlatformIO ESP32](https://docs.platformio.org/en/latest/platforms/espressif32.html)
+- [Hardware Abstraction Layer Guide](docs/HAL_GUIDE.md)
+- [Template Configuration Guide](TEMPLATE_CONFIG_GUIDE.md)
 
 ---
-*Last Updated: Current Session - System Fully Functional*
-*Status: ✅ All Major Issues Resolved - Ready for Testing*
+*This troubleshooting guide covers common issues when using the ESP32 Modular Device Template*
+*For project-specific issues, check the documentation in your chosen example directory*

@@ -1,18 +1,18 @@
-# Static Analysis for Lightning Detection System
+# Static Analysis for ESP32 Template
 
-This project uses comprehensive static analysis tools to maintain high code quality and catch potential issues early in development.
+This ESP32 template uses comprehensive static analysis tools to maintain high code quality and catch potential issues early in development.
 
 ## 🔧 Tools Configured
 
 ### 1. **cppcheck** (Memory Safety & Logic Analysis)
 - **Purpose**: Detects memory leaks, buffer overflows, null pointer dereferences
 - **Configuration**: Built into PlatformIO check environments
-- **Environments**: `sender-check`, `receiver-check`
+- **Environments**: `template-check`, `example-check`
 
 ### 2. **clang-tidy** (Comprehensive Code Quality)
 - **Purpose**: Comprehensive C++ static analysis, modernization, and style checking
 - **Configuration**: `.clang-tidy` file with embedded-friendly rules
-- **Environments**: `sender-tidy`, `receiver-tidy`
+- **Environments**: `template-tidy`, `example-tidy`
 
 ## 🚀 Quick Start
 
@@ -25,10 +25,10 @@ This project uses comprehensive static analysis tools to maintain high code qual
 ./run_tidy.sh
 
 # Run specific environment
-pio check -e sender-tidy
-pio check -e receiver-tidy
-pio check -e sender-check
-pio check -e receiver-check
+pio check -e template-tidy
+pio check -e example-tidy
+pio check -e template-check
+pio check -e example-check
 ```
 
 ### Requirements
@@ -77,26 +77,26 @@ Our `.clang-tidy` configuration is optimized for embedded C++ development:
 
 ### Cppcheck Environments
 ```ini
-[env:sender-check]
-extends = env:sender
+[env:template-check]
+extends = env:template
 check_tool = cppcheck
 check_flags = cppcheck: --enable=all --suppress=missingIncludeSystem
 
-[env:receiver-check]
-extends = env:receiver
+[env:example-check]
+extends = env:environmental_monitor
 check_tool = cppcheck
 check_flags = cppcheck: --enable=all --suppress=missingIncludeSystem
 ```
 
 ### Clang-Tidy Environments
 ```ini
-[env:sender-tidy]
-extends = env:sender
+[env:template-tidy]
+extends = env:template
 check_tool = clangtidy
 check_flags = clangtidy: --config-file=.clang-tidy
 
-[env:receiver-tidy]
-extends = env:receiver
+[env:example-tidy]
+extends = env:environmental_monitor
 check_tool = clangtidy
 check_flags = clangtidy: --config-file=.clang-tidy
 ```
@@ -108,13 +108,13 @@ GitHub Actions automatically runs all static analysis:
 ```yaml
 - name: Run PlatformIO Check (cppcheck)
   run: |
-    pio check -e sender-check
-    pio check -e receiver-check
+    pio check -e template-check
+    pio check -e example-check
 
 - name: Run PlatformIO Check (clang-tidy)
   run: |
-    pio check -e sender-tidy
-    pio check -e receiver-tidy
+    pio check -e template-tidy
+    pio check -e example-tidy
 ```
 
 ## 🔧 Customization
@@ -201,4 +201,4 @@ Our configuration already disables many embedded-unfriendly checks like:
 
 ---
 
-*This static analysis setup ensures our lightning detection system maintains professional code quality while being embedded-system friendly.*
+*This static analysis setup ensures your ESP32 projects maintain professional code quality while being embedded-system friendly.*

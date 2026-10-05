@@ -1,13 +1,13 @@
 # Release Process
 
-This document explains how to create releases for the SBT PIO Heltec V3 OLED project.
+This document explains how to create releases for the ESP32 Modular Device Template.
 
 ## Overview
 
 The project uses GitHub Actions to automatically build and release firmware when a tag is pushed. Each release includes:
 
-- **Sender Firmware**: For devices that send LoRa messages
-- **Receiver Firmware**: For devices that receive LoRa messages and support OTA updates
+- **Template Firmware**: Compiled template firmware for demonstration
+- **Example Firmware**: Pre-built example project firmware
 - **Web Flasher Pages**: HTML files for easy web-based firmware flashing
 - **Manifest Files**: JSON files compatible with ESP32 web flasher tools
 
@@ -74,16 +74,15 @@ When a tag is pushed, the following happens automatically:
 Each release includes the following files:
 
 ### Firmware Binaries
-- `sender_firmware.bin` - Sender role firmware
-- `receiver_firmware.bin` - Receiver role firmware
+- `template_firmware.bin` - Basic template firmware
+- `environmental_monitor.bin` - Environmental monitor example firmware
 
 ### Web Flasher Files
-- `sender_web_flasher.html` - Web-based flasher for sender devices
-- `receiver_web_flasher.html` - Web-based flasher for receiver devices
+- `template_web_flasher.html` - Web-based flasher for template firmware
+- `example_web_flasher.html` - Web-based flasher for example projects
 
 ### Manifest Files
-- `sender_manifest.json` - ESP32 web flasher manifest for sender
-- `receiver_manifest.json` - ESP32 web flasher manifest for receiver
+- `firmware_manifest.json` - ESP32 web flasher manifest for all firmware variants
 
 ## Using the Web Flasher
 
@@ -169,4 +168,4 @@ To improve the release process:
 
 ## License
 
-This release process is part of the SBT PIO Heltec V3 OLED project and follows the same license terms.
+This release process is part of the ESP32 Modular Device Template and follows the same license terms.
